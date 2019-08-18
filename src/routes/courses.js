@@ -1,28 +1,18 @@
 const express = require('express');
-const Joi = require('joi');
+
+const { Course, validate } = require('../models/course');
+const { Author } = require('../models/author');
 
 const router = express.Router();
 
-const courses = [
-  {id: 0, name: 'js course'},
-  {id: 1, name: 'node.js course'},
-  {id: 2, name: 'mongoose course'}
-];
-
-const validateCourse = course => {
-  const schema = {
-    name: Joi.string().min(3).required()
-  };
-
-  return Joi.validate(course, schema);
-};
-
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+  const courses = await Course.find().sort('date');
   res.send(courses);
 });
 
-router.get('/:id', (req, res) => {
-  const course = courses.find(course => course.id === parseInt(req.params.id));
+router.get('/:id', async (req, res) => {
+  const course = await Course.findById(req.params.id);
+
   if (!course) {
     return res.status(404).send('Not found');
   }
@@ -30,43 +20,72 @@ router.get('/:id', (req, res) => {
   res.send(course);
 });
 
-router.post('/', (req, res) => {
-  const {error} = validateCourse(req.body);
+router.post('/', async (req, res) => {
+  const {authorId, ...restBodyProps} = req.body;
+  const {error} = validate(req.body);
   if (error) {
     return res.status(400).send(error);
   }
 
-  const course = {
-    id: courses.length,
-    name: req.body.name
-  };
+  const author = await Author.findById(authorId);
+  if (!author) {
+    return res.status(400).send('Invalid author Id')
+  }
 
-  courses.push(course);
+  let course = new Course({
+    ...restBodyProps,
+    author: {
+      _id: author._id,
+      name: author.name
+    }
+  });
+
+  course = await course.save();
   res.send(course);
 });
 
-router.put('/:id', (req, res) => {
-  const course = courses.find(course => course.id === parseInt(req.params.id));
-  if (!course) {
-    return res.status(404).send('Not found');
-  }
-
-  const {error} = validateCourse(req.body);
+router.put('/:id', async (req, res) => {
+  const {authorId, ...restBodyProps} = req.body;
+  const {error} = validate(req.body);
   if (error) {
     return res.status(400).send(error);
   }
 
-  course.name = req.body.name;
-  res.send(course);
-});
+  let author;
+  if (authorId) {
+    author = await Author.findById(authorId);
+    if (!author) {
+      return res.status(400).send('Invalid author Id')
+    }
+  }
 
-router.delete('/:id', (req, res) => {
-  const course = courses.find(course => course.id === parseInt(req.params.id));
+  let body = {...restBodyProps};
+  if (author) {
+    body = {
+      ...restBodyProps,
+      author: {
+        _id: author._id,
+        name: author.name
+      }
+    }
+  }
+
+  const course = await Course.findByIdAndUpdate(req.params.id, body, { new: true });
+
   if (!course) {
     return res.status(404).send('Not found');
   }
 
-  courses.splice(courses.indexOf(course), 1);
+  res.send(course);
+});
+
+router.delete('/:id', async (req, res) => {
+  const course = await Course.findByIdAndRemove(req.params.id);
+
+  if (!course) {
+    return res.status(404).send('Not found');
+  }
+
   res.send(course);
 });
 
