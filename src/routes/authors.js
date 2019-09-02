@@ -48,7 +48,7 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   const author = await Author.findByIdAndRemove(req.params.id);
 
-  if (!Author) {
+  if (!author) {
     return res.status(404).send('Not found');
   }
 
