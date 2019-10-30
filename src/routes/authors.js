@@ -2,6 +2,7 @@ const express = require('express');
 
 const { Author, validate } = require('../models/author');
 const auth = require('../middlewares/auth');
+const admin = require('../middlewares/admin');
 
 const router = express.Router();
 
@@ -46,7 +47,7 @@ router.put('/:id', auth, async (req, res) => {
   res.send(author);
 });
 
-router.delete('/:id', auth, async (req, res) => {
+router.delete('/:id', [auth, admin], async (req, res) => {
   const author = await Author.findByIdAndRemove(req.params.id);
 
   if (!author) {

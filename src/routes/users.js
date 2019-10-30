@@ -7,7 +7,7 @@ const auth = require('../middlewares/auth');
 const router = express.Router();
 
 router.get('/me', auth, async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select({ password: 0 });
 
   if (!user) {
     res.status(400).send('User not found');
