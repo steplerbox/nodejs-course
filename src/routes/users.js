@@ -2,8 +2,19 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 
 const { User, validate } = require('../models/user');
+const auth = require('../middlewares/auth');
 
 const router = express.Router();
+
+router.get('/me', auth, async (req, res) => {
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    res.status(400).send('User not found');
+  }
+
+  res.send(user);
+});
 
 router.post('/', async (req, res) => {
   const {error} = validate(req.body);

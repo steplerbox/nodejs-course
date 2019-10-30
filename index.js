@@ -8,7 +8,7 @@ if (!config.get('jwtKey')) {
   process.exit(1);
 }
 
-mongoose.connect('mongodb://localhost/nodejs-course')
+mongoose.connect('mongodb://localhost/nodejs-course', { useNewUrlParser: true, useCreateIndex: true })
   .then(() => console.log('connected to mongoDB...'))
   .catch(err => console.error('failed connect to mongoDB...', err));
 
