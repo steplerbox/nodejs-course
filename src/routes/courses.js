@@ -2,6 +2,7 @@ const express = require('express');
 
 const { Course, validate } = require('../models/course');
 const { Author } = require('../models/author');
+const auth = require('../middlewares/auth');
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ router.get('/:id', async (req, res) => {
   res.send(course);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const {authorId, ...restBodyProps} = req.body;
   const {error} = validate(req.body);
   if (error) {
@@ -44,7 +45,7 @@ router.post('/', async (req, res) => {
   res.send(course);
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
   const {authorId, ...restBodyProps} = req.body;
   const {error} = validate(req.body);
   if (error) {
@@ -79,7 +80,7 @@ router.put('/:id', async (req, res) => {
   res.send(course);
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', auth, async (req, res) => {
   const course = await Course.findByIdAndRemove(req.params.id);
 
   if (!course) {
