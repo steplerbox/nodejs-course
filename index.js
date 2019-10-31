@@ -1,3 +1,4 @@
+require('express-async-errors');
 const express = require('express');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
@@ -8,7 +9,11 @@ if (!config.get('jwtKey')) {
   process.exit(1);
 }
 
-mongoose.connect('mongodb://localhost/nodejs-course', { useNewUrlParser: true, useCreateIndex: true })
+mongoose.connect('mongodb://localhost/nodejs-course', {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    reconnectTries: 3
+  })
   .then(() => console.log('connected to mongoDB...'))
   .catch(err => console.error('failed connect to mongoDB...', err));
 
@@ -17,6 +22,7 @@ const courses = require('./src/routes/courses');
 const authors = require('./src/routes/authors');
 const users = require('./src/routes/users');
 const auth = require('./src/routes/auth');
+const errorMiddleware = require('./src/middlewares/error');
 
 const app = express();
 
@@ -26,10 +32,12 @@ app.use('/api/courses', courses);
 app.use('/api/authors', authors);
 app.use('/api/users', users);
 app.use('/api/auth', auth);
+app.use(errorMiddleware);
 
 if (app.get('env') === 'development') {
   app.use(morgan('tiny'));
 }
+
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`listen on ${port} ...`));
